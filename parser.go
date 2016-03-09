@@ -1,6 +1,9 @@
 package main
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type parserState int
 
@@ -10,16 +13,16 @@ const (
 )
 
 type parser struct {
-	lex   *lexer
+	lex   lexer
 	state parserState
 }
 
-func newParser(lex *lexer) parser {
+func newParser(lex lexer) parser {
 	return parser{
 		lex: lex}
 }
 
-func (p *parser) parse(exNode executionNode) error {
+func (p *parser) parse(exNode *executionNode) error {
 	var currPattern [][]tokenType
 	var patternPos int
 	var builder instruction
@@ -40,8 +43,6 @@ func (p *parser) parse(exNode executionNode) error {
 				// Try to find the pattern for the given instruction so we know
 				// how to parse it
 				if val, err := patternFromName(t.data); err == nil {
-					currPattern = val
-					patternPos = 0
 					// Get the buildable instruction from the name
 					if val2, err := instructionFromName(t.data); err == nil {
 						builder = val2
@@ -49,8 +50,21 @@ func (p *parser) parse(exNode executionNode) error {
 					} else {
 						return newParseError(err.Error(), t.startingChar)
 					}
-					// Start parsing tokens according to the specific instruction
-					p.state = parserStateInstructionSpecific
+
+					if len(val) > 0 {
+						// The instruction has arguments that need to be parsed.
+						// Start parsing tokens according to the specific
+						// instruction
+						currPattern = val
+						patternPos = 0
+						p.state = parserStateInstructionSpecific
+					} else {
+						// The instruction has no arguments and can be
+						// immediately added
+						exNode.instructions = append(exNode.instructions, builder)
+						p.state = parserStateNone
+						instructionCnt++
+					}
 				} else {
 					return newParseError(err.Error(), t.startingChar)
 				}
@@ -105,6 +119,8 @@ func (p *parser) parse(exNode executionNode) error {
 					builder.setArg(exNode.any, argPos)
 				case "LAST":
 					builder.setArg(exNode.last, argPos)
+				default:
+					return newParseError("unknown port or register '"+t.data+"'", t.startingChar)
 				}
 			} else if t.tType == tokenNumber {
 				// Check that the token's data is a valid number if it is a
@@ -116,16 +132,29 @@ func (p *parser) parse(exNode executionNode) error {
 				if val != int(number(val)) {
 					return newParseError("'"+t.data+"' falls outside the range of an acceptable TIS-100 number", t.startingChar)
 				}
+
+				// Create a temporary register to serve the number
+				numReg := newRegister(val)
+				builder.setArg(numReg, argPos)
 			}
 
-			// Go to the next pattern or finish the instruction
+			// Go to the next argument
+			argPos++
+
+			// Go to the next pattern
 			patternPos++
-			if patternPos == len(currPattern) {
+
+			// Check if the instruction is finished building
+			if patternPos >= len(currPattern) {
 				exNode.instructions = append(exNode.instructions, builder)
 				p.state = parserStateNone
 				instructionCnt++
 			}
 		}
+	}
+
+	for _, val := range exNode.instructions {
+		fmt.Printf("%T: %+v\n", val, val)
 	}
 
 	return nil

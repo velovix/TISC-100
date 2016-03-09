@@ -23,6 +23,7 @@ type token struct {
 	data         string
 }
 
+// lexerState represents the type of token the lexer is currently constructing
 type lexerState int
 
 //go:generate stringer -type=lexerState
@@ -33,7 +34,7 @@ const (
 )
 
 type lexer struct {
-	scan      *scanner
+	scan      scanner
 	state     lexerState
 	tokens    []token
 	currToken int
@@ -41,7 +42,7 @@ type lexer struct {
 
 // newLexer creates a new lexer that reads characters from the given scanner
 // object.
-func newLexer(scan *scanner) lexer {
+func newLexer(scan scanner) lexer {
 	return lexer{
 		scan:   scan,
 		tokens: make([]token, 0, 20)}
@@ -84,6 +85,7 @@ func (l *lexer) lex() error {
 					tType:        tokenLabel,
 					startingChar: startingChar,
 					data:         strings.ToUpper(data)})
+				data = ""
 				l.state = lexerStateNone
 			} else if unicode.IsSpace(character.c) {
 				// A space denotes the end of a name
@@ -91,6 +93,7 @@ func (l *lexer) lex() error {
 					tType:        tokenName,
 					startingChar: startingChar,
 					data:         strings.ToUpper(data)})
+				data = ""
 				l.state = lexerStateNone // Reset the lexer state
 			} else {
 				// An invalid character
@@ -108,9 +111,12 @@ func (l *lexer) lex() error {
 					tType:        tokenNumber,
 					startingChar: startingChar,
 					data:         data})
+				data = ""
 				l.state = lexerStateNone // Reset the lexer state
+			} else {
+				// An invalid character
+				return newParseError("unexpected character '"+string(character.c)+"'", character)
 			}
-
 		}
 	}
 

@@ -1,11 +1,17 @@
 package main
 
+import "fmt"
+
 // char represents a single character and marks where the character is in the
 // code.
 type char struct {
 	c    rune
 	pos  int
 	line int
+}
+
+func (c char) String() string {
+	return fmt.Sprintf("%v (%v, %v)", string(c.c), c.pos, c.line)
 }
 
 // scanner takes in code as a string and emits it as individual tokens.
@@ -29,11 +35,6 @@ func (s *scanner) add(chars string) {
 		if val == '#' {
 			// The beginning of a comment. Ignore everything until a newline
 			s.ignoringChars = true
-		} else if val == '\n' {
-			// Go to the next line and reset cursor position on newline
-			s.currLine++
-			s.currPos = 0
-			s.ignoringChars = false // Exit comment ignoring mode if we're there
 		}
 
 		if !s.ignoringChars {
@@ -44,6 +45,14 @@ func (s *scanner) add(chars string) {
 				line: s.currLine})
 		}
 		s.currPos++
+
+		if val == '\n' {
+			// Go to the next line and reset cursor position on newline
+			s.currLine++
+			s.currPos = 0
+			s.ignoringChars = false // Exit comment ignoring mode if we're there
+		}
+
 	}
 }
 

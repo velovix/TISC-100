@@ -14,19 +14,19 @@ import (
 func patternFromName(insName string) ([][]tokenType, error) {
 	switch insName {
 	case "NOP":
-		return [][]tokenType{{}}, nil
+		return [][]tokenType{}, nil
 	case "MOV":
 		return [][]tokenType{{tokenName, tokenNumber}, {tokenName}}, nil
 	case "SWP":
-		return [][]tokenType{{}}, nil
+		return [][]tokenType{}, nil
 	case "SAV":
-		return [][]tokenType{{}}, nil
+		return [][]tokenType{}, nil
 	case "ADD":
 		return [][]tokenType{{tokenName, tokenNumber}}, nil
 	case "SUB":
 		return [][]tokenType{{tokenName, tokenNumber}}, nil
 	case "NEG":
-		return [][]tokenType{{}}, nil
+		return [][]tokenType{}, nil
 	case "JMP":
 		return [][]tokenType{{tokenLabel}}, nil
 	case "JEZ":
@@ -40,7 +40,7 @@ func patternFromName(insName string) ([][]tokenType, error) {
 	case "JRO":
 		return [][]tokenType{{tokenName, tokenNumber}}, nil
 	default:
-		return [][]tokenType{{}}, errors.New("invalid instruction " + insName)
+		return [][]tokenType{}, errors.New("invalid instruction " + insName)
 	}
 }
 
@@ -74,7 +74,6 @@ func instructionFromName(insName string) (instruction, error) {
 		return &jlz{}, nil
 	case "JRO":
 		return &jro{}, nil
-
 	default:
 		return &nop{}, errors.New("invalid instruction " + insName)
 	}

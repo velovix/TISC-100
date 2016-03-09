@@ -6,5 +6,5 @@ import (
 )
 
 func newParseError(message string, c char) error {
-	return errors.New(fmt.Sprint(string(message), "at line", string(c.line)+", character", c.pos))
+	return errors.New(fmt.Sprint(message, " at line ", c.line, ", character ", c.pos))
 }

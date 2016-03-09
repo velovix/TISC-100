@@ -43,7 +43,8 @@ func newMachineConfig(config string) (machineConfig, error) {
 
 // machine represents the TIS-100 instance. It is a collection of nodes.
 type machine struct {
-	nodes [][]node
+	nodes      [][]node
+	stopSignal chan struct{}
 }
 
 // newMachine creates a new machine from the given machine config . It
@@ -51,6 +52,8 @@ type machine struct {
 // other.
 func newMachine(config machineConfig) (machine, error) {
 	var m machine
+
+	m.stopSignal = make(chan struct{})
 
 	// Construct an empty array of nodes based on the size of the nodes in the config
 	m.nodes = make([][]node, len(config.Nodes))
@@ -87,4 +90,15 @@ func newMachine(config machineConfig) (machine, error) {
 	}
 
 	return m, nil
+}
+
+// start starts all execution nodes.
+func (m *machine) start() {
+	for _, row := range m.nodes {
+		for _, elem := range row {
+			if execNode, ok := elem.(*executionNode); ok {
+				go execNode.start(m.stopSignal)
+			}
+		}
+	}
 }
