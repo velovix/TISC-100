@@ -1,0 +1,14 @@
+{
+	"name": "Example Project",
+	"nodes":
+		[["e", "e"],
+		 ["e", "e"]],
+	"consoleIn": {
+		"side": "top",
+		"pos": 0
+	},
+	"consoleOut": {
+		"side": "bottom",
+		"pos": 1
+	}
+}
