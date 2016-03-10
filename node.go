@@ -3,19 +3,19 @@ package main
 // node represents a node with four ends that can read and write from those
 // ends
 type node interface {
-	getRight() numberReadWriter
+	getRight() port
 	readRight() number
 	writeRight(number)
 
-	getLeft() numberReadWriter
+	getLeft() port
 	readLeft() number
 	writeLeft(number)
 
-	getUp() numberReadWriter
+	getUp() port
 	readUp() number
 	writeUp(number)
 
-	getDown() numberReadWriter
+	getDown() port
 	readDown() number
 	writeDown(number)
 }

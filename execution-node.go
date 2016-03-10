@@ -1,23 +1,22 @@
 package main
 
-import "fmt"
-
 type executionNode struct {
-	up, down, left, right, any, last numberReadWriter
-	acc, bak                         numberReadWriter
+	up, down, left, right, last port
+	any                         *anyPort
+	acc, bak                    numberReadWriter
 
 	labels       map[string]int
 	instructions []instruction
 }
 
-func newExecutionNode(up, down, left, right, any, last numberReadWriter) *executionNode {
+func newExecutionNode(up, down, left, right, last port, any *anyPort) *executionNode {
 	return &executionNode{
 		up:           up,
 		down:         down,
 		left:         left,
 		right:        right,
-		any:          any,
 		last:         last,
+		any:          any,
 		acc:          newRegister(0),
 		bak:          newRegister(0),
 		labels:       make(map[string]int),
@@ -40,9 +39,6 @@ func (en *executionNode) start(stopped chan struct{}) {
 			// Do nothing
 		case *mov:
 			// Move data from the source into the destination
-			if ins.dest == nil {
-				fmt.Println("ooooooh dogs!")
-			}
 			ins.dest.writeNum(ins.source.readNum())
 			i++
 		case *swp:
@@ -57,12 +53,12 @@ func (en *executionNode) start(stopped chan struct{}) {
 			i++
 		case *add:
 			// Add source to ACC
-			sum := int(en.acc.readNum()) + int(ins.source.readNum())
+			sum := addNum(en.acc.readNum(), int(ins.source.readNum()))
 			en.acc.writeNum(number(sum))
 			i++
 		case *sub:
 			// Sub source from ACC
-			diff := int(en.acc.readNum()) - int(ins.source.readNum())
+			diff := subtractNum(en.acc.readNum(), int(ins.source.readNum()))
 			en.acc.writeNum(number(diff))
 			i++
 		case *neg:
@@ -139,18 +135,18 @@ func (en *executionNode) writeDown(n number) {
 	en.down.writeNum(n)
 }
 
-func (en *executionNode) getUp() numberReadWriter {
+func (en *executionNode) getUp() port {
 	return en.up
 }
 
-func (en *executionNode) getDown() numberReadWriter {
+func (en *executionNode) getDown() port {
 	return en.down
 }
 
-func (en *executionNode) getLeft() numberReadWriter {
+func (en *executionNode) getLeft() port {
 	return en.left
 }
 
-func (en *executionNode) getRight() numberReadWriter {
+func (en *executionNode) getRight() port {
 	return en.right
 }

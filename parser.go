@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -151,10 +150,6 @@ func (p *parser) parse(exNode *executionNode) error {
 				instructionCnt++
 			}
 		}
-	}
-
-	for _, val := range exNode.instructions {
-		fmt.Printf("%T: %+v\n", val, val)
 	}
 
 	return nil
