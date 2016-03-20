@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type executionNode struct {
 	up, down, left, right, last port
 	any                         *anyPort
@@ -7,10 +11,13 @@ type executionNode struct {
 
 	labels       map[string]int
 	instructions []instruction
+
+	name string
 }
 
-func newExecutionNode(up, down, left, right, last port, any *anyPort) *executionNode {
+func newExecutionNode(name string, up, down, left, right, last port, any *anyPort) *executionNode {
 	return &executionNode{
+		name:         name,
 		up:           up,
 		down:         down,
 		left:         left,
@@ -23,14 +30,21 @@ func newExecutionNode(up, down, left, right, last port, any *anyPort) *execution
 		instructions: make([]instruction, 0)}
 }
 
+func (en *executionNode) String() string {
+	return en.name
+}
+
 func (en *executionNode) start(stopped chan struct{}) {
 	// Don't start running if the excution node is empty
 	if len(en.instructions) == 0 {
 		return
 	}
 
+	var ok bool
+
 	// Keep running the instruction until a stop signal is recieved
 	i := 0 // Instruction position
+execution:
 	for {
 		nextInstruction := en.instructions[i]
 
@@ -68,26 +82,49 @@ func (en *executionNode) start(stopped chan struct{}) {
 			i++
 		case *jmp:
 			// Jump execution to the given label
-			i = en.labels[ins.l]
+			if i, ok = en.labels[ins.l]; !ok {
+				fmt.Println("unknown label '" + ins.l + "'")
+				break execution // The label doesn't exist, so we halt execution
+			}
 		case *jez:
 			// Jump execution to the given label if ACC is zero
 			if en.acc.readNum() == 0 {
-				i = en.labels[ins.l]
+				if i, ok = en.labels[ins.l]; !ok {
+					fmt.Println("unknown label '" + ins.l + "'")
+					break execution // The label doesn't exist, so we halt execution
+				}
+			} else {
+				i++
 			}
 		case *jnz:
 			// Jump execution to the given label if ACC is not zero
 			if en.acc.readNum() != 0 {
-				i = en.labels[ins.l]
+				if i, ok = en.labels[ins.l]; !ok {
+					fmt.Println("unknown label '" + ins.l + "'")
+					break execution // The label doesn't exist, so we halt execution
+				}
+			} else {
+				i++
 			}
 		case *jgz:
 			// Jump execution to the given label if ACC is greater than zero
 			if en.acc.readNum() > 0 {
-				i = en.labels[ins.l]
+				if i, ok = en.labels[ins.l]; !ok {
+					fmt.Println("unknown label '" + ins.l + "'")
+					break execution // The label doesn't exist, so we halt execution
+				}
+			} else {
+				i++
 			}
 		case *jlz:
 			// Jump execution to the given label if ACC is less than zero
 			if en.acc.readNum() < 0 {
-				i = en.labels[ins.l]
+				if i, ok = en.labels[ins.l]; !ok {
+					fmt.Println("unknown label '" + ins.l + "'")
+					break execution // The label doesn't exist, so we halt execution
+				}
+			} else {
+				i++
 			}
 		case *jro:
 			// Move execution by the given offset unconditionally
@@ -101,38 +138,6 @@ func (en *executionNode) start(stopped chan struct{}) {
 	}
 
 	stopped <- struct{}{}
-}
-
-func (en *executionNode) readRight() number {
-	return en.up.readNum()
-}
-
-func (en *executionNode) readLeft() number {
-	return en.left.readNum()
-}
-
-func (en *executionNode) readUp() number {
-	return en.up.readNum()
-}
-
-func (en *executionNode) readDown() number {
-	return en.down.readNum()
-}
-
-func (en *executionNode) writeRight(n number) {
-	en.right.writeNum(n)
-}
-
-func (en *executionNode) writeLeft(n number) {
-	en.left.writeNum(n)
-}
-
-func (en *executionNode) writeUp(n number) {
-	en.up.writeNum(n)
-}
-
-func (en *executionNode) writeDown(n number) {
-	en.down.writeNum(n)
 }
 
 func (en *executionNode) getUp() port {

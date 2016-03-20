@@ -1,7 +1,7 @@
 {
 	"name": "Example Project",
 	"nodes":
-		[["e", "e"],
+		[["e", "s"],
 		 ["e", "e"]],
 	"consoleIn": {
 		"side": "top",

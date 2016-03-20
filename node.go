@@ -4,18 +4,9 @@ package main
 // ends
 type node interface {
 	getRight() port
-	readRight() number
-	writeRight(number)
-
 	getLeft() port
-	readLeft() number
-	writeLeft(number)
-
 	getUp() port
-	readUp() number
-	writeUp(number)
-
 	getDown() port
-	readDown() number
-	writeDown(number)
+
+	start(stopped chan struct{})
 }

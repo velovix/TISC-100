@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 )
 
@@ -116,8 +117,8 @@ func newMachine(config machineConfig) (machine, error) {
 	nodeWidth := len(m.nodes[0])
 	nodeHeight := len(m.nodes)
 
-	for x, valX := range config.Nodes {
-		for y, valY := range valX {
+	for y, valY := range config.Nodes {
+		for x, valX := range valY {
 			// The node's ports default to ones that go nowhere
 			var up, down, left, right port = newNodePort(), newNodePort(), newNodePort(), newNodePort()
 
@@ -161,7 +162,7 @@ func newMachine(config machineConfig) (machine, error) {
 				}
 			}
 
-			switch valY {
+			switch valX {
 			case "e":
 				// The node is an execution node
 
@@ -169,18 +170,31 @@ func newMachine(config machineConfig) (machine, error) {
 
 				if y-1 >= 0 {
 					// If there is a node above this node, connect it
-					up = m.nodes[x][y-1].getDown()
+					up = m.nodes[y-1][x].getDown()
 				}
 				if x-1 >= 0 {
 					// If there is a node to the left of this node, connect it
-					left = m.nodes[x-1][y].getRight()
+					left = m.nodes[y][x-1].getRight()
 				}
 
-				m.nodes[x][y] = newExecutionNode(up, down, left, right, any.lastUsedPort, any)
+				m.nodes[y][x] = newExecutionNode(fmt.Sprint(x, "-", y), up, down, left, right, any.lastUsedPort, any)
+			case "s":
+				// The node is a stack node
+
+				if y-1 >= 0 {
+					// If there is a node above this node. connect it
+					up = m.nodes[y-1][x].getDown()
+				}
+				if x-1 >= 0 {
+					// If there is a node to the left of this node, connect it
+					left = m.nodes[y][x-1].getRight()
+				}
+
+				m.nodes[y][x] = newStackNode(up, down, left, right)
 			default:
 				// The node is invalid
 
-				return machine{}, errors.New("invalid node type '" + valY + "'")
+				return machine{}, errors.New("invalid node type '" + valX + "'")
 			}
 		}
 	}
@@ -192,9 +206,7 @@ func newMachine(config machineConfig) (machine, error) {
 func (m *machine) start() {
 	for _, row := range m.nodes {
 		for _, elem := range row {
-			if execNode, ok := elem.(*executionNode); ok {
-				go execNode.start(m.stopSignal)
-			}
+			go elem.start(m.stopSignal)
 		}
 	}
 }

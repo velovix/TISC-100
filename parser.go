@@ -4,6 +4,7 @@ import (
 	"strconv"
 )
 
+// parserState represents what the parser expects next.
 type parserState int
 
 const (
@@ -11,16 +12,22 @@ const (
 	parserStateInstructionSpecific
 )
 
+// parser is a TIS-100 instruction parser. It constructs full, valid
+// instructions from lexer tokens.
 type parser struct {
 	lex   lexer
 	state parserState
 }
 
+// newParser creates a new parser that reads tokens from the given lexer.
 func newParser(lex lexer) parser {
 	return parser{
 		lex: lex}
 }
 
+// parse parses the tokens into instructions, or returns an error if the tokens
+// don't create a valid instruction for whatever reason. The instructions are
+// put into the given execution node.
 func (p *parser) parse(exNode *executionNode) error {
 	var currPattern [][]tokenType
 	var patternPos int
@@ -86,17 +93,6 @@ func (p *parser) parse(exNode *executionNode) error {
 		case parserStateInstructionSpecific:
 			// The parser is parsing an instruction
 
-			// Check the current token against the list of acceptable tokens
-			validToken := false
-			for _, val := range currPattern[patternPos] {
-				if t.tType == val {
-					validToken = true
-				}
-			}
-			if !validToken {
-				return newParseError("invalid token '"+t.data+"'", t.startingChar)
-			}
-
 			// Check that the token is valid and feed it into the builder
 			if t.tType == tokenName {
 				switch t.data {
@@ -119,7 +115,8 @@ func (p *parser) parse(exNode *executionNode) error {
 				case "LAST":
 					builder.setArg(exNode.last, argPos)
 				default:
-					return newParseError("unknown port or register '"+t.data+"'", t.startingChar)
+					// The token is probably a label
+					builder.setArg(t.data, argPos)
 				}
 			} else if t.tType == tokenNumber {
 				// Check that the token's data is a valid number if it is a

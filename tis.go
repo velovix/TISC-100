@@ -22,8 +22,8 @@ func main() {
 	}
 
 	// Load a source file for each executable node
-	for x, row := range mach.nodes {
-		for y, elem := range row {
+	for y, row := range mach.nodes {
+		for x, elem := range row {
 			switch t := elem.(type) {
 			case *executionNode:
 				// The node is an execution node, so it may have a source file
