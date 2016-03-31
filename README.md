@@ -21,6 +21,15 @@ command line tool, is to play the game.
 
 ## Creating a Project
 A TISC-100 project is characterized by a set of `.tis` files and a single `machine.json`. The
-`machine.json` is where the node structure of your program is defined.
+`machine.json` is where the node structure of your program is defined. Projects in TISC-100
+are named in the `machine.json` instead of in a special comment.
 
-TODO: Add more information about projects when that is closer to be finished.
+Nodes are defined as a two-dimensional array of strings. The letter "e" is an execution node
+and "s" is a stack node.
+
+Console input and output are defined with the side the input or output plugs into the node
+array and the position of it on that side. If it plugs into the top or bottom, the position
+value refers to its x position. If it plugs into the left or right, the position value
+refers to its y position.
+
+See the example project for a better idea of how to set up a TISC-100 project.
